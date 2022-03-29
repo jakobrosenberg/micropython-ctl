@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.13.9](https://github.com/metachris/micropython-ctl/compare/v1.13.8...v1.13.9) (2022-03-29)
+
+
+### Bug Fixes
+
+* bad types ([4439683](https://github.com/metachris/micropython-ctl/commit/44396834542be7efa8fe5a0b88e39a740377c40f))
+* deprecated Buffer syntax ([3773adc](https://github.com/metachris/micropython-ctl/commit/3773adc319bbc30a9a82d5f9d19a999d31d9a77d))
+* upgrade serialport ([7ae5f6f](https://github.com/metachris/micropython-ctl/commit/7ae5f6fa5b240d1101a15e9a1e6552213f90f5a5))
+
 ### [1.13.8](https://github.com/metachris/micropython-ctl/compare/v1.13.4...v1.13.8) (2022-02-10)
 
 
