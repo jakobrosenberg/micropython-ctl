@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.13.10](https://github.com/metachris/micropython-ctl/compare/v1.13.9...v1.13.10) (2022-05-18)
+
 ### [1.13.9](https://github.com/metachris/micropython-ctl/compare/v1.13.8...v1.13.9) (2022-03-29)
 
 
