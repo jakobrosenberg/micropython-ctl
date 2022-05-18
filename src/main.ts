@@ -23,7 +23,7 @@ try {
   // tslint:disable-next-line: no-var-requires
   webserver = require('./webserver')
   // tslint:disable-next-line: no-empty
-} catch {}
+} catch { }
 
 const delayMillis = (delayMs: number) => new Promise(resolve => setTimeout(resolve, delayMs));
 
@@ -315,6 +315,15 @@ export class MicroPythonDevice {
     // on-open listener
     this.state.port.on('open', () => {
       // debug('serialport onopen')
+
+      // avoid MCU waiting in bootloader on hardware restart by setting both dtr and rts high
+      // ref: https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html#automatic-bootloader
+      // only on windows and not in browser
+      if (process.platform === 'win32' && typeof window === 'undefined') {
+        debug('serialport onopen - set dtr and rts high')
+        this.state.port.set({ dtr: true, rts: true })
+      }
+
       this.state.connectionState = ConnectionState.OPEN
       this.state.replMode = ReplMode.TERMINAL
       this.clearBuffer()
