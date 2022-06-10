@@ -73,7 +73,7 @@ def listdir(directory):
 def listdir(directory):
     files = os.ilistdir(directory)
     out = []
-    for (filename, filetype, inode, _) in files:
+    for (filename, filetype, inode, *_) in files:
         fn_full = "/" + filename if directory == '/' else directory + '/' + filename
         isdir = filetype == 0x4000
         if isdir:
