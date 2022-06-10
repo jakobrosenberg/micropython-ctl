@@ -27,7 +27,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { execSync } from 'child_process';
 import readline from 'readline'
-import { Buffer } from 'buffer/'
+import { Buffer } from 'buffer'
 import { SerialPort } from 'serialport';
 import { Command } from 'commander';
 import { ScriptExecutionError, MicroPythonDevice, WEBSERVER_PORT, FileListEntry } from '../src/main';

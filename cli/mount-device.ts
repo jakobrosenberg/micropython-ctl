@@ -11,7 +11,7 @@
  */
 import * as nodePath from 'path'
 import * as crypto from 'crypto'
-import { Buffer } from 'buffer/'
+import { Buffer } from 'buffer'
 import { MicroPythonDevice, FileListEntry as UpstreamFileListEntry } from '../src/main';
 import { checkAndInstall as checkAndInstallFuse } from './fuse-dependencies'
 
