@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.14.0](https://github.com/metachris/micropython-ctl/compare/v1.13.11...v1.14.0) (2022-06-23)
+
+
+### Features
+
+* added chucking override ([8748432](https://github.com/metachris/micropython-ctl/commit/874843272d7b0aa0bee307363f8a2a7b63c493fa))
+
 ### [1.13.11](https://github.com/metachris/micropython-ctl/compare/v1.13.10...v1.13.11) (2022-06-10)
 
 
