@@ -77,6 +77,8 @@ type promiseReject = (reason: any) => void
 export interface DeviceState {
   connectionMode: ConnectionMode
 
+  options: ConnectOptions
+
   connectionPath: string | null // 'serial:/dev/ttyUSB0' or 'ws://192.168.1.120:8266'
 
   port: any
@@ -134,6 +136,11 @@ export interface FileListEntry {
   sha256?: string
 }
 
+export interface ConnectOptions {
+  chunkSize?: number | null
+  chunkDelay?: number | null
+}
+
 declare const window: WindowWithWebRepl
 
 /**
@@ -182,6 +189,10 @@ export class MicroPythonDevice {
     this.state = {
       connectionMode: ConnectionMode.NETWORK,
       connectionState: ConnectionState.CLOSED,
+      options: {
+        chunkSize: null,
+        chunkDelay: null,
+      },
 
       connectionPath: null,
 
@@ -291,7 +302,8 @@ export class MicroPythonDevice {
    * @param path Serial interface (eg. `/dev/ttyUSB0`, `/dev/tty.SLAB_USBtoUART`, ...)
    * @throws {CouldNotConnect} Connection failed
    */
-  public async connectSerial(path: string) {
+  public async connectSerial(path: string, options?: ConnectOptions) {
+    if (options) Object.assign(this.state.options, options)
     debug('connectSerial', path)
     this.state.connectionPath = `serial:${path}`
 
@@ -808,8 +820,10 @@ export class MicroPythonDevice {
     // network, else the webrepl can't parse it quick enough and returns an error.
     // Therefore we chunk the data and add a send delay.
     // 120b and 180ms delay seems to work well for all ESP32 devices.
-    const chunkSize = this.isSerialDevice() ? 3000 : 120 // how many bytes to send per chunk.
-    const chunkDelayMillis = this.isSerialDevice() ? 0 : 200 // fixed delay. a progressive delay doesn't seem to help
+    const chunkSize =
+      this.state.options.chunkSize || (this.isSerialDevice() ? 3000 : 120) // how many bytes to send per chunk.
+    const chunkDelayMillis =
+      this.state.options.chunkDelay || (this.isSerialDevice() ? 0 : 200) // fixed delay. a progressive delay doesn't seem to help
     debug(
       `runScript: ${script.length} bytes -> ${Math.ceil(
         script.length / chunkSize,
@@ -1045,11 +1059,9 @@ export class MicroPythonDevice {
     this.createReplPromise()
     const dataHex = data.toString('hex')
     // const chunkSize = this.isSerialDevice() ? 256 : 64
-    const chunkSize = this.isProxyConnection()
-      ? 5000
-      : this.isSerialDevice()
-      ? 3000
-      : 64
+    const chunkSize =
+      this.state.options.chunkSize ||
+      (this.isProxyConnection() ? 5000 : this.isSerialDevice() ? 3000 : 64)
 
     const script1 = `import ubinascii; f = open('${targetFilename}', 'wb')`
     await this.runScript(script1, {
