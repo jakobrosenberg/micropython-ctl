@@ -81,7 +81,7 @@ export interface DeviceState {
 
   connectionPath: string | null // 'serial:/dev/ttyUSB0' or 'ws://192.168.1.120:8266'
 
-  port: any
+  port: import('serialport').SerialPort
   ws: WebSocket | null
   wsConnectTimeout: NodeJS.Timeout | undefined
   wsConnectTimeoutTriggered: boolean
@@ -196,6 +196,7 @@ export class MicroPythonDevice {
 
       connectionPath: null,
 
+      /** @ts-ignore */
       port: null,
       ws: null,
       wsConnectTimeout: undefined,
