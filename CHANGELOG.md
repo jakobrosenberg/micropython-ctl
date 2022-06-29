@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.1](https://github.com/metachris/micropython-ctl/compare/v1.14.0...v1.14.1) (2022-06-29)
+
+
+### Bug Fixes
+
+* missing types for Device.port ([7b39831](https://github.com/metachris/micropython-ctl/commit/7b39831505de9bcd38dc7964b7928a36e23802d6))
+
 ## [1.14.0](https://github.com/metachris/micropython-ctl/compare/v1.13.11...v1.14.0) (2022-06-23)
 
 
