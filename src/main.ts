@@ -94,6 +94,7 @@ export interface DeviceState {
   replPromise: Promise<string> | null // helper to await command executions
   replPromiseResolve: promiseResolve | null
   replPromiseReject: promiseReject | null
+  replPromiseIsPending: Boolean
 
   rawReplState: RawReplState
 
@@ -187,6 +188,7 @@ export class MicroPythonDevice {
 
   constructor() {
     this.state = {
+      replPromiseIsPending: false,
       connectionMode: ConnectionMode.NETWORK,
       connectionState: ConnectionState.CLOSED,
       options: {
@@ -262,11 +264,19 @@ export class MicroPythonDevice {
   }
 
   private createReplPromise(): Promise<string> {
-    this.state.replPromise = new Promise((resolve, reject) => {
-      this.state.replPromiseResolve = resolve
-      this.state.replPromiseReject = reject
-    })
-    return this.state.replPromise
+    if (this.state.replPromiseIsPending === true) {
+      logger.debug('Inherit unresolved REPL promise')
+    } else {
+      this.state.replPromise = new Promise((resolve, reject) => {
+        this.state.replPromiseResolve = resolve
+        this.state.replPromiseReject = reject
+      })
+      this.state.replPromiseIsPending = true
+      this.state.replPromise.finally(
+        () => (this.state.replPromiseIsPending = false),
+      )
+    }
+    return this.state.replPromise as Promise<any>
   }
 
   /** The internal webserver is used to proxy runScript commands over an existing connection */
@@ -587,12 +597,14 @@ export class MicroPythonDevice {
     })
 
     // Set cancel timeout
-    this.state.readUntilTimeout = setTimeout(() => {
-      if (this.state.isReadingUntil && this.state.readUntilPromiseReject)
-        this.state.readUntilPromiseReject(
-          `Error: timeout in readUntil '${data}'`,
-        )
-    }, timeout * 1000)
+    if (timeout)
+      this.state.readUntilTimeout = setTimeout(() => {
+        if (this.state.isReadingUntil && this.state.readUntilPromiseReject) {
+          this.state.readUntilPromiseReject(
+            new Error(`timeout in readUntil '${data}'`),
+          )
+        }
+      }, timeout * 1000)
 
     // Return the promise
     return this.state.readUntilPromise
@@ -860,8 +872,6 @@ export class MicroPythonDevice {
     logger.debug(`runScript: script done (${millisRuntime / 1000}sec)`)
     this.state.lastRunScriptTimeNeeded = millisRuntime
 
-    // await this.exitRawRepl()
-
     return scriptOutput
   }
 
@@ -893,11 +903,11 @@ export class MicroPythonDevice {
     this.state.rawReplState = RawReplState.WAITING_FOR_SCRIPT
   }
 
-  private async exitRawRepl() {
-    // debug('exitRawRepl')
+  private async exitRawRepl(timeout?: number) {
+    logger.debug('exitRawRepl')
     if (this.state.replMode !== ReplMode.SCRIPT_RAW_MODE) return
     this.sendData('\r\x02')
-    await this.readUntil('>>>')
+    await this.readUntil('>>>', timeout)
     this.state.replMode = ReplMode.TERMINAL
   }
 
@@ -1129,7 +1139,7 @@ export class MicroPythonDevice {
     // Serial connection stays open after reset, webrepl closes
     if (this.isSerialDevice()) {
       await delayMillis(1000)
-      await this.exitRawRepl()
+      await this.exitRawRepl(0)
     }
   }
 
