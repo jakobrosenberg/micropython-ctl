@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.2](https://github.com/metachris/micropython-ctl/compare/v1.14.1...v1.14.2) (2022-07-04)
+
+
+### Bug Fixes
+
+* resetting device with boot scripts should not throw errors ([c020fee](https://github.com/metachris/micropython-ctl/commit/c020feeea1b62e4d81b8d0afc4878b2f511032ca))
+
 ### [1.14.1](https://github.com/metachris/micropython-ctl/compare/v1.14.0...v1.14.1) (2022-06-29)
 
 
