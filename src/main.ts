@@ -12,7 +12,7 @@ import {
   CouldNotConnect,
   ScriptExecutionError,
 } from './errors'
-import { debug, debug2, dedent } from './utils'
+import { logger, dedent } from './utils'
 import * as PythonScripts from './python-scripts'
 import { WEBSERVER_PORT } from './settings'
 
@@ -271,7 +271,7 @@ export class MicroPythonDevice {
 
   /** The internal webserver is used to proxy runScript commands over an existing connection */
   public async startInternalWebserver() {
-    debug('startInternalWebserver...')
+    logger.debug('startInternalWebserver...')
     if (webserver) webserver.run(this)
   }
 
@@ -292,7 +292,7 @@ export class MicroPythonDevice {
         }
       }
     } catch (e) {
-      debug(e)
+      logger.debug(e)
     }
     return false
   }
@@ -305,7 +305,7 @@ export class MicroPythonDevice {
    */
   public async connectSerial(path: string, options?: ConnectOptions) {
     if (options) Object.assign(this.state.options, options)
-    debug('connectSerial', path)
+    logger.debug('connectSerial', path)
     this.state.connectionPath = `serial:${path}`
 
     // Connect to serial device
@@ -334,7 +334,7 @@ export class MicroPythonDevice {
       }
 
       if (this.state.replPromiseReject) {
-        debug(err)
+        logger.debug(err)
         const e =
           this.state.connectionState === ConnectionState.CONNECTING
             ? new CouldNotConnect(err.toString())
@@ -353,7 +353,7 @@ export class MicroPythonDevice {
       // ref: https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/boot-mode-selection.html#automatic-bootloader
       // only on windows and not in browser
       if (process.platform === 'win32' && typeof window === 'undefined') {
-        debug('serialport onopen - set dtr and rts high')
+        logger.debug('serialport onopen - set dtr and rts high')
         this.state.port.set({ dtr: true, rts: true })
       }
 
@@ -499,7 +499,7 @@ export class MicroPythonDevice {
     ) {
       // final response for put
       if (decodeWebreplBinaryResponse(data) === 0) {
-        debug('Upload success')
+        logger.debug('Upload success')
         if (this.state.replPromiseResolve) this.state.replPromiseResolve('')
       } else {
         console.error('Upload failed')
@@ -615,7 +615,7 @@ export class MicroPythonDevice {
         data,
       ])
       if (this.state.readUntilBuffer.includes(this.state.readUntilData)) {
-        debug2('Resolving readingUntilPromise')
+        logger.silly('Resolving readingUntilPromise')
         clearTimeout(this.state.readUntilTimeout)
         this.state.isReadingUntil = false
         this.state.readUntilPromiseResolve!('')
@@ -634,7 +634,7 @@ export class MicroPythonDevice {
     // Perpare strings for easy access
     const dataStr = this.state.dataRawBuffer.toString()
     const dataTrimmed = dataStr.trim()
-    debug2('handleProtocolData', data, '=>', dataStr)
+    logger.silly('handleProtocolData', data, '=>', dataStr)
 
     // Handle RAW_MODE data (receiving response, receiving error, waiting for end, changing back to friendly repl)
     if (this.state.replMode === ReplMode.SCRIPT_RAW_MODE) {
@@ -642,7 +642,7 @@ export class MicroPythonDevice {
         // After script is sent, we wait for OK, then stdout_output, then \x04, then stderr_output
         // OK[ok_output]\x04[error_output][x04]>
         if (dataTrimmed.startsWith('OK')) {
-          debug2('- ok received, start collecting input')
+          logger.silly('- ok received, start collecting input')
           this.clearBuffer()
           this.state.rawReplState = RawReplState.SCRIPT_RECEIVING_RESPONSE
           this.state.receivingResponseSubState =
@@ -655,7 +655,7 @@ export class MicroPythonDevice {
       if (this.state.rawReplState === RawReplState.SCRIPT_RECEIVING_RESPONSE) {
         // iterate over received bytes
         for (const entry of data) {
-          debug2('- process entry:', entry)
+          logger.silly('- process entry:', entry)
 
           // There are 3 special markers: switching from output to error, from error to waiting for end, and
           if (
@@ -663,7 +663,7 @@ export class MicroPythonDevice {
             this.state.receivingResponseSubState ===
               RawReplReceivingResponseSubState.SCRIPT_RECEIVING_OUTPUT
           ) {
-            debug2('- switching error part')
+            logger.silly('- switching error part')
             this.state.receivingResponseSubState =
               RawReplReceivingResponseSubState.SCRIPT_RECEIVING_ERROR
           } else if (
@@ -671,7 +671,7 @@ export class MicroPythonDevice {
             this.state.receivingResponseSubState ===
               RawReplReceivingResponseSubState.SCRIPT_RECEIVING_ERROR
           ) {
-            debug2('- switching to end mode')
+            logger.silly('- switching to end mode')
             this.state.receivingResponseSubState =
               RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
           } else if (
@@ -680,7 +680,7 @@ export class MicroPythonDevice {
               RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
           ) {
             // ALL DONE, now trim the buffers and resolve the promises
-            debug2('- raw repl interaction finished')
+            logger.silly('- raw repl interaction finished')
             // debug('all done!!!')
 
             this.state.inputBuffer = this.state.inputBuffer.trim()
@@ -772,7 +772,7 @@ export class MicroPythonDevice {
       this.state.connectionState = ConnectionState.CLOSED
       return this.createReplPromise()
     } else {
-      debug('Websocket already closed')
+      logger.debug('Websocket already closed')
       return false
     }
   }
@@ -794,12 +794,12 @@ export class MicroPythonDevice {
     if (options.runGcCollectBeforeCommand)
       script = 'import gc; gc.collect();\n' + script
 
-    debug(`runScript\n${script}`)
+    logger.debug(`runScript\n${script}`)
 
     if (this.isProxyConnection()) {
       let url = `http://localhost:${WEBSERVER_PORT}/api/run-script/`
       if (options.stayInRawRepl) url += `?stayInRawRepl=1`
-      debug('run over api', url)
+      logger.debug('run over api', url)
       const resp = await fetch(url, { method: 'POST', body: script })
       const content = await resp.text()
 
@@ -815,7 +815,7 @@ export class MicroPythonDevice {
     }
 
     await this.enterRawRepl()
-    debug('runScript: raw mode entered')
+    logger.debug('runScript: raw mode entered')
 
     // Send data to raw repl. Note: cannot send too much data at once over the
     // network, else the webrepl can't parse it quick enough and returns an error.
@@ -825,7 +825,7 @@ export class MicroPythonDevice {
       this.state.options.chunkSize || (this.isSerialDevice() ? 3000 : 120) // how many bytes to send per chunk.
     const chunkDelayMillis =
       this.state.options.chunkDelay || (this.isSerialDevice() ? 0 : 200) // fixed delay. a progressive delay doesn't seem to help
-    debug(
+    logger.debug(
       `runScript: ${script.length} bytes -> ${Math.ceil(
         script.length / chunkSize,
       )} chunks`,
@@ -848,16 +848,16 @@ export class MicroPythonDevice {
 
     // Send ctrl+D to execute the uploaded script in the raw repl
     this.sendData('\x04')
-    debug('runScript: script sent, waiting for response')
+    logger.debug('runScript: script sent, waiting for response')
 
     if (options.resolveBeforeResult) return ''
 
     // wait for script execution
     const scriptOutput = await promise
-    debug('output', scriptOutput)
+    logger.debug('output', scriptOutput)
 
     const millisRuntime = Math.round(Date.now() - millisStart)
-    debug(`runScript: script done (${millisRuntime / 1000}sec)`)
+    logger.debug(`runScript: script done (${millisRuntime / 1000}sec)`)
     this.state.lastRunScriptTimeNeeded = millisRuntime
 
     // await this.exitRawRepl()
@@ -869,7 +869,7 @@ export class MicroPythonDevice {
     // see also https://github.com/scientifichackers/ampy/blob/master/ampy/pyboard.py#L175
     // debug('enterRawRepl')
     if (this.state.replMode === ReplMode.SCRIPT_RAW_MODE) {
-      return debug('enterRawRepl: already in raw repl mode')
+      return logger.debug('enterRawRepl: already in raw repl mode')
     }
 
     this.state.replMode = ReplMode.SCRIPT_RAW_MODE
@@ -970,7 +970,7 @@ export class MicroPythonDevice {
     const recursive = !!options.recursive
     const includeSha256 = !!options.includeSha256
 
-    debug(`listFiles: ${directory}, ${recursive}`)
+    logger.debug(`listFiles: ${directory}, ${recursive}`)
     const output = await this.runScript(
       PythonScripts.ls({ directory, recursive, includeSha256 }),
     )
@@ -1003,7 +1003,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError} if not found: "`OSError: [Errno 2] ENOENT`"
    */
   public async getFile(filename: string): Promise<Buffer> {
-    debug(`getFile: ${filename}`)
+    logger.debug(`getFile: ${filename}`)
     const output = await this.runScript(PythonScripts.getFile(filename))
     return Buffer.from(output, 'hex')
   }
@@ -1011,7 +1011,7 @@ export class MicroPythonDevice {
   public async statPath(
     path: string,
   ): Promise<{ exists: boolean; isDir: boolean; size: number }> {
-    debug(`statPath: ${path}`)
+    logger.debug(`statPath: ${path}`)
     const statOutput = await this.runScript(PythonScripts.stat(path))
     if (statOutput.trim() === 'x')
       return { exists: false, isDir: false, size: 0 }
@@ -1026,7 +1026,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError}
    */
   public async mkdir(name: string): Promise<boolean> {
-    debug(`mkdir: ${name}`)
+    logger.debug(`mkdir: ${name}`)
     const script = `import os; os.mkdir('${name}')`
     await this.runScript(script)
     return true
@@ -1050,7 +1050,7 @@ export class MicroPythonDevice {
     data: Buffer,
     options: PutFileOptions = {},
   ) {
-    debug(`putFile: ${targetFilename} (${data.length})`)
+    logger.debug(`putFile: ${targetFilename} (${data.length})`)
 
     if (options.checkIfSimilarBeforeUpload) {
       const isAlreadyTheSame = await this.isFileTheSame(targetFilename, data)
@@ -1072,7 +1072,7 @@ export class MicroPythonDevice {
 
     for (let index = 0; index < dataHex.length; index += chunkSize) {
       const chunk = dataHex.substr(index, chunkSize)
-      debug('chunk', chunk)
+      logger.debug('chunk', chunk)
       const scriptForChunk = `f.write(ubinascii.unhexlify("${chunk}"))`
       await this.runScript(scriptForChunk, { stayInRawRepl: true }) // keeps raw repl open for next instruction
     }
@@ -1091,7 +1091,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError} if directory not empty: "OSError: 39"
    */
   public async remove(path: string, recursive = false) {
-    debug('remove', path, recursive)
+    logger.debug('remove', path, recursive)
     const script = recursive
       ? PythonScripts.deleteEverythingRecurive(path)
       : `import os; os.remove("${path}")`
@@ -1105,7 +1105,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError} if directory not empty: "OSError: 39"
    */
   public async rename(oldPath: string, newPath: string) {
-    debug('rename', oldPath, newPath)
+    logger.debug('rename', oldPath, newPath)
     const script = `import os; os.rename("${oldPath}", "${newPath}")`
     await this.runScript(script)
   }
@@ -1117,7 +1117,7 @@ export class MicroPythonDevice {
     const script = options.softReset
       ? 'import sys; sys.exit()'
       : 'import machine; machine.reset()'
-    debug('reset', script, options)
+    logger.debug('reset', script, options)
 
     // Need to exit after sending, because it will not exit the RAW repl mode like any other script
     // since the device is actually restarting.
@@ -1145,7 +1145,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError} if not found: "`OSError: [Errno 2] ENOENT`"
    */
   public async getFileHash(filename: string): Promise<string> {
-    debug('getFileHash', filename)
+    logger.debug('getFileHash', filename)
     const script = PythonScripts.getFileHash(filename)
     const sha256HexDigest = await this.runScript(script)
     return sha256HexDigest
@@ -1163,7 +1163,7 @@ export class MicroPythonDevice {
    * @throws {ScriptExecutionError} if not found: "OSError: [Errno 2] ENOENT"
    */
   public async isFileTheSame(filename: string, data: Buffer) {
-    debug('isFileTheSame', filename, data.length)
+    logger.debug('isFileTheSame', filename, data.length)
     const crypto = require('crypto')
     const localHash = crypto.createHash('sha256').update(data).digest('hex')
     const script = PythonScripts.isFileTheSame(filename, data.length, localHash)
@@ -1193,7 +1193,7 @@ export class MicroPythonDevice {
    * ```
    */
   public async getBoardInfo(): Promise<BoardInfo> {
-    debug('getBoardInfo')
+    logger.debug('getBoardInfo')
     const script = `
       import uos, machine, ubinascii, gc
       try:
