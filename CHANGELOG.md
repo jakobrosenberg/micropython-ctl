@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.3](https://github.com/metachris/micropython-ctl/compare/v1.14.2...v1.14.3) (2022-07-18)
+
+
+### Bug Fixes
+
+* regression error ([e5420af](https://github.com/metachris/micropython-ctl/commit/e5420af88563db55d75e5ca08baf93609eb207a1))
+
 ### [1.14.2](https://github.com/metachris/micropython-ctl/compare/v1.14.1...v1.14.2) (2022-07-04)
 
 
