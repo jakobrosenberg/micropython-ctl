@@ -264,19 +264,20 @@ export class MicroPythonDevice {
   }
 
   private createReplPromise(): Promise<string> {
-    if (this.state.replPromiseIsPending === true) {
-      logger.debug('Inherit unresolved REPL promise')
-    } else {
+    // todo recycling promises is required for restarting devices, but it leaves errors uncaught
+    // if (this.state.replPromiseIsPending === true) {
+    //   logger.debug('Inherit unresolved REPL promise')
+    // } else {
       this.state.replPromise = new Promise((resolve, reject) => {
         this.state.replPromiseResolve = resolve
         this.state.replPromiseReject = reject
       })
-      this.state.replPromiseIsPending = true
-      this.state.replPromise.finally(
-        () => (this.state.replPromiseIsPending = false),
-      )
-    }
-    return this.state.replPromise as Promise<any>
+    //   this.state.replPromiseIsPending = true
+    //   this.state.replPromise.finally(
+    //     () => (this.state.replPromiseIsPending = false),
+    //   )
+    // }
+    return this.state.replPromise
   }
 
   /** The internal webserver is used to proxy runScript commands over an existing connection */
