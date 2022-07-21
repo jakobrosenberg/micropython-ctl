@@ -1043,6 +1043,29 @@ export class MicroPythonDevice {
     return true
   }
 
+  public async mkdirs(path: string): Promise<boolean> {
+    console.log('create paths for', path)
+    const createPaths = (input) => {
+      const fragments = input.split("/").filter(Boolean);
+      return fragments.reduce((last, curr) => [...last, `${last.pop()}/${curr}`], [fragments.shift()]).filter(Boolean);
+    };
+    const paths = createPaths(path)
+
+    const pathsString = paths.map(p => `"${p}"`).join(', ')
+    const script = [
+      'import os',
+      `for path in [${pathsString}]:`,
+      '  try:',
+      '    os.mkdir(path)',
+      '  except Exception as e:',
+      '    if (e.args[0] != 17):',
+      '      raise',
+      ''
+    ].join('\r\n')
+    await this.runScript(script, {broadcastOutputAsTerminalData: true, disableDedent: true})
+    return true
+  }
+
   /**
    * Uploading data to the device, saving as a file.
    *
