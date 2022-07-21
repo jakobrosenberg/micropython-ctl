@@ -1044,7 +1044,7 @@ export class MicroPythonDevice {
   }
 
   public async mkdirs(path: string): Promise<boolean> {
-    console.log('create paths for', path)
+    logger.debug('create paths for', path)
     const createPaths = (input) => {
       const fragments = input.split("/").filter(Boolean);
       return fragments.reduce((last, curr) => [...last, `${last.pop()}/${curr}`], [fragments.shift()]).filter(Boolean);
