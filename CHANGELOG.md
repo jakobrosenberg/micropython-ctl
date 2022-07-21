@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.15.1](https://github.com/metachris/micropython-ctl/compare/v1.15.0...v1.15.1) (2022-07-21)
+
+
+### Bug Fixes
+
+* console.log should be logger.debug ([6e12d03](https://github.com/metachris/micropython-ctl/commit/6e12d03e95a1f6ad4095c286aaf6b3283f991d5b))
+
 ## [1.15.0](https://github.com/metachris/micropython-ctl/compare/v1.14.3...v1.15.0) (2022-07-21)
 
 
