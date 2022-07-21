@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/metachris/micropython-ctl/compare/v1.14.3...v1.15.0) (2022-07-21)
+
+
+### Features
+
+* added mkdirs ([63334ab](https://github.com/metachris/micropython-ctl/commit/63334aba29fa6b66ee0715f79c420210cc1ecd84))
+
 ### [1.14.3](https://github.com/metachris/micropython-ctl/compare/v1.14.2...v1.14.3) (2022-07-18)
 
 
