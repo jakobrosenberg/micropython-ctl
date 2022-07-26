@@ -268,10 +268,10 @@ export class MicroPythonDevice {
     // if (this.state.replPromiseIsPending === true) {
     //   logger.debug('Inherit unresolved REPL promise')
     // } else {
-      this.state.replPromise = new Promise((resolve, reject) => {
-        this.state.replPromiseResolve = resolve
-        this.state.replPromiseReject = reject
-      })
+    this.state.replPromise = new Promise((resolve, reject) => {
+      this.state.replPromiseResolve = resolve
+      this.state.replPromiseReject = reject
+    })
     //   this.state.replPromiseIsPending = true
     //   this.state.replPromise.finally(
     //     () => (this.state.replPromiseIsPending = false),
@@ -693,7 +693,7 @@ export class MicroPythonDevice {
               RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
           ) {
             // ALL DONE, now trim the buffers and resolve the promises
-            logger.silly('- raw repl interaction finished')
+            logger.debug('- raw repl interaction finished')
             // debug('all done!!!')
 
             this.state.inputBuffer = this.state.inputBuffer.trim()
@@ -740,6 +740,11 @@ export class MicroPythonDevice {
   }
 
   sendData(data: string | Buffer | ArrayBuffer) {
+    if (data[0] === 0x06) {
+      logger.debug('received safeboot (0x06)')
+      this.state.receivingResponseSubState =
+        RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
+    }
     if (this.state.connectionMode === ConnectionMode.NETWORK) {
       return this.wsSendData(data)
     } else {
