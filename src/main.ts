@@ -1046,12 +1046,16 @@ export class MicroPythonDevice {
   public async mkdirs(path: string): Promise<boolean> {
     logger.debug('create paths for', path)
     const createPaths = (input) => {
-      const fragments = input.split("/").filter(Boolean);
-      return fragments.reduce((last, curr) => [...last, `${last.pop()}/${curr}`], [fragments.shift()]).filter(Boolean);
-    };
+      const fragments = input.split('/').map((v) => v || '')
+      return fragments
+        .reduce((last, curr) => [...last, `${last.pop()}/${curr}`], [
+          fragments.shift(),
+        ])
+        .filter(Boolean)
+    }
     const paths = createPaths(path)
 
-    const pathsString = paths.map(p => `"${p}"`).join(', ')
+    const pathsString = paths.map((p) => `"${p}"`).join(', ')
     const script = [
       'import os',
       `for path in [${pathsString}]:`,
@@ -1060,9 +1064,12 @@ export class MicroPythonDevice {
       '  except Exception as e:',
       '    if (e.args[0] != 17):',
       '      raise',
-      ''
+      '',
     ].join('\r\n')
-    await this.runScript(script, {broadcastOutputAsTerminalData: true, disableDedent: true})
+    await this.runScript(script, {
+      broadcastOutputAsTerminalData: true,
+      disableDedent: true,
+    })
     return true
   }
 
