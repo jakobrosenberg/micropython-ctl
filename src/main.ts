@@ -69,6 +69,7 @@ enum RawReplReceivingResponseSubState {
   SCRIPT_RECEIVING_OUTPUT = 'SCRIPT_RECEIVING_OUTPUT',
   SCRIPT_RECEIVING_ERROR = 'SCRIPT_RECEIVING_ERROR',
   SCRIPT_WAITING_FOR_END = 'SCRIPT_WAITING_FOR_END',
+  SCRIPT_ABORTED = 'SCRIPT_ABORTED',
 }
 
 type promiseResolve = (value: string | PromiseLike<string>) => void
@@ -688,9 +689,11 @@ export class MicroPythonDevice {
             this.state.receivingResponseSubState =
               RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
           } else if (
-            entry === 62 &&
             this.state.receivingResponseSubState ===
-              RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
+              RawReplReceivingResponseSubState.SCRIPT_ABORTED ||
+            (entry === 62 &&
+              this.state.receivingResponseSubState ===
+                RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END)
           ) {
             // ALL DONE, now trim the buffers and resolve the promises
             logger.debug('- raw repl interaction finished')
@@ -715,6 +718,15 @@ export class MicroPythonDevice {
             }
 
             this.clearBuffer()
+
+            if (
+              this.state.receivingResponseSubState ===
+              RawReplReceivingResponseSubState.SCRIPT_ABORTED
+            ) {
+              // if we're aborting, the current data isn't for rawRepl. Better send it to the terminal.
+              if (this.onTerminalData) this.onTerminalData(data.toString())
+              break
+            }
           } else {
             // Incoming data (stdout or stderr output). Just add to buffer
             const char = String.fromCharCode(entry)
@@ -740,10 +752,10 @@ export class MicroPythonDevice {
   }
 
   sendData(data: string | Buffer | ArrayBuffer) {
-    if (data[0] === 0x06) {
+    if (data[0] === 0x06 || data[0].toString() === '\x06') {
       logger.debug('received safeboot (0x06)')
       this.state.receivingResponseSubState =
-        RawReplReceivingResponseSubState.SCRIPT_WAITING_FOR_END
+        RawReplReceivingResponseSubState.SCRIPT_ABORTED
     }
     if (this.state.connectionMode === ConnectionMode.NETWORK) {
       return this.wsSendData(data)
