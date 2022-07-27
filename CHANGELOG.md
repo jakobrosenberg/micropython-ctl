@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.15.3](https://github.com/metachris/micropython-ctl/compare/v1.15.2...v1.15.3) (2022-07-27)
+
+
+### Bug Fixes
+
+* better handling of safeboot during rawrepl ([56542b3](https://github.com/metachris/micropython-ctl/commit/56542b35817f52517e33d8e65d88d09fcac87706))
+
 ### [1.15.2](https://github.com/metachris/micropython-ctl/compare/v1.15.1...v1.15.2) (2022-07-27)
 
 
