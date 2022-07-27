@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.15.2](https://github.com/metachris/micropython-ctl/compare/v1.15.1...v1.15.2) (2022-07-27)
+
+
+### Bug Fixes
+
+* leading slashes were lost for mkdirs ([c4b86db](https://github.com/metachris/micropython-ctl/commit/c4b86dbe99bfdc4149dcfda893ca484c7dda3d86))
+* rawRepl didn't detect safeboot (0x06) ([e3e271c](https://github.com/metachris/micropython-ctl/commit/e3e271c5768ac3c630fde31ab77464e6c20b18ba))
+
 ### [1.15.1](https://github.com/metachris/micropython-ctl/compare/v1.15.0...v1.15.1) (2022-07-21)
 
 
