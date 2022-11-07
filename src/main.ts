@@ -645,30 +645,24 @@ export class MicroPythonDevice {
     // Extend raw data buffer (data may come in as chunks with arbitrary length)
     this.state.dataRawBuffer = Buffer.concat([this.state.dataRawBuffer, data])
 
-    // Perpare strings for easy access
-    const dataStr = this.state.dataRawBuffer.toString()
-    const dataTrimmed = dataStr.trim()
-    logger.silly('handleProtocolData', data, '=>', dataStr)
+    logger.silly('handleProtocolData', data)
 
     // Handle RAW_MODE data (receiving response, receiving error, waiting for end, changing back to friendly repl)
     if (this.state.replMode === ReplMode.SCRIPT_RAW_MODE) {
-      if (this.state.rawReplState === RawReplState.SCRIPT_SENT) {
-        // After script is sent, we wait for OK, then stdout_output, then \x04, then stderr_output
-        // OK[ok_output]\x04[error_output][x04]>
-        if (dataTrimmed.startsWith('OK')) {
-          logger.silly('- ok received, start collecting input')
-          this.clearBuffer()
-          this.state.rawReplState = RawReplState.SCRIPT_RECEIVING_RESPONSE
-          this.state.receivingResponseSubState =
-            RawReplReceivingResponseSubState.SCRIPT_RECEIVING_OUTPUT
-        }
-        return
-      }
-
       // SCRIPT OUTPUT: OK[ok_output]\x04[error_output][x04]>
-      if (this.state.rawReplState === RawReplState.SCRIPT_RECEIVING_RESPONSE) {
-        // iterate over received bytes
-        for (const entry of data) {
+      // iterate over received bytes
+      for (const entry of data) {
+        if (this.state.rawReplState === RawReplState.SCRIPT_SENT) {
+          // After script is sent, we wait for OK, then stdout_output, then \x04, then stderr_output
+          if (entry === 0x4B) {
+            // wait for K to be received => OK :)
+            logger.silly('- ok received, start collecting input')
+            this.clearBuffer()
+            this.state.rawReplState = RawReplState.SCRIPT_RECEIVING_RESPONSE
+            this.state.receivingResponseSubState =
+              RawReplReceivingResponseSubState.SCRIPT_RECEIVING_OUTPUT
+          }
+        } else if (this.state.rawReplState === RawReplState.SCRIPT_RECEIVING_RESPONSE) {
           logger.silly('- process entry:', entry)
 
           // There are 3 special markers: switching from output to error, from error to waiting for end, and
